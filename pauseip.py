@@ -7,37 +7,32 @@ import threading
 
 log_path = "/var/log/apache2/access.log"
 
+#block_duration 시간만큼 IP 차단
 def block_ip_address(ip, block_duration):
     subprocess.call(["iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"])
 
     unblock_time = datetime.now() + block_duration
     unblock_command = f'iptables -D INPUT -s {ip} -j DROP'
 
-    # Run system command to unblock IP address after block_duration
     while datetime.now() < unblock_time:
         continue
     subprocess.run(unblock_command.split())
 
 def extract_time(log_string):
-    # regular expression pattern to match time in log string
+    # access.log에서 시간을 추출하는 정규표현식
     pattern = r'\[(.*?)\]'
-
-    # use regular expression to extract time from log string
     match = re.search(pattern, log_string)
 
     if match:
-        # extract time string from match object
         time_str = match.group(1)
-        # convert time string to datetime object
         access_time = datetime.strptime(time_str, '%d/%b/%Y:%H:%M:%S %z')
         #return time_str
         return access_time
     else:
         return None
 
-
+# 실시간으로 로그 저장
 def tail_log_store():
-    # 로그 파일을 실시간으로 읽기 위한 subprocess 실행
 
     command = "tail -f " + log_path
 
@@ -60,10 +55,11 @@ def tail_log_store():
             break
     return line
 
+# 매크로 탐지 패턴, 메인 함수
 def tail_log_file():
     line = []
-    line = tail_log_store()
-    ip_count = {}
+    line = tail_log_store() #실시간으로 저장한 로그를 문자열로 받아온다.
+    ip_count = {} 
 
     if not line:
         print("no log")

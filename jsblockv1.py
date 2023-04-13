@@ -6,13 +6,14 @@ import re
 log_path = "/var/log/apache2/access.log"
 blocked_js_file = "/var/log/apache2/blocked_js.log"
 
-# 로그 파일 실시간 모니터링 함수
+# IP 차단 & 차단한 IP관리
 def block_ip_address(ip):
     subprocess.call(["iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"])
     with open(blocked_js_file, "a") as f:
         f.write(ip + "\n")
 
 
+# 실시간으로 생성되는 로그 저장
 def tail_log_store():
     # 로그 파일을 실시간으로 읽기 위한 subprocess 실행
     
@@ -22,7 +23,7 @@ def tail_log_store():
     
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
     line = []
-    count = 0 #로그 개수를 저장할 변수
+    count = 0 
     # subprocess의 stdout에서 로그 라인을 읽어들여 처리
     while True:
         log_string = process.stdout.readline().decode()
@@ -36,6 +37,8 @@ def tail_log_store():
         if count == 20:
             break
     return line
+
+# 자바스크립트 차단 함수
 def tail_log_file():
     line = []
     line = tail_log_store()
@@ -66,10 +69,6 @@ def tail_log_file():
                 print("Uri not detected")
               
 
-
-
-            
-# IP 주소 차단하는 함수
 
 while(1):
     tail_log_file()
